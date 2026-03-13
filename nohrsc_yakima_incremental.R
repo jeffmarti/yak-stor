@@ -1,22 +1,22 @@
 # =============================================================================
 # nohrsc_yakima_incremental.R
 #
-# NOHRSC Yakima Basin SWE Scraper — Incremental Updater
+# NOHRSC Yakima Basin SWE Scraper -- Incremental Updater
 # Uses graph_only.php endpoint (fast, ~32KB vs ~507KB for graph.html)
 # English units (inches) via units=0
 # Hardcoded basin acres derived from NOHRSC snapshot 2026-03-11
 #
 # Exposes: update_nohrsc_data(data_dir = "data")
-#   — called daily by update_pipeline.R via GitHub Actions
-#   — can also be sourced and called interactively
-#   — or run standalone: Rscript nohrsc_yakima_incremental.R
+#   -- called daily by update_pipeline.R via GitHub Actions
+#   -- can also be sourced and called interactively
+#   -- or run standalone: Rscript nohrsc_yakima_incremental.R
 #
 # Data flow:
 #   NOHRSC graph_only.php
-#       → hourly HTML tables
-#       → daily sub-basin means      → nohrsc_yakima_subbasin_daily.csv
-#       → reservoir-level rollup     → nohrsc_yakima_reservoir_daily.csv
-#       → stitch with CE history     → yakima_swe_combined.csv
+#       -> hourly HTML tables
+#       -> daily sub-basin means      -> nohrsc_yakima_subbasin_daily.csv
+#       -> reservoir-level rollup     -> nohrsc_yakima_reservoir_daily.csv
+#       -> stitch with CE history     -> yakima_swe_combined.csv
 #
 # Output schema (reservoir + combined files):
 #   Date, reservoir, swe_mean_in, acres, snow_storage_acre_feet, source, water_year
@@ -73,7 +73,7 @@ suppressPackageStartupMessages({
   RIM =  3807 + 43942 + 70273    # 118022
 )
 
-# CE (Climate Engine) source acres — used when rebuilding combined CSV
+# CE (Climate Engine) source acres -- used when rebuilding combined CSV
 # These differ slightly from NOHRSC acres due to basin delineation method
 .ce_acres <- c(
   BUM = 44415,
@@ -117,10 +117,13 @@ suppressPackageStartupMessages({
       resp <- GET(url, write_disk(tmp, overwrite = TRUE), timeout(timeout_sec))
       if (http_error(resp)) stop("HTTP error: ", status_code(resp))
 
-      page       <- read_html(tmp)
-      data_table <- page %>%
-        html_element("table.data_table") %>%
-        html_table(fill = TRUE)
+      page     <- read_html(tmp)
+      tbl_node <- html_element(page, "table.data_table")
+
+      if (inherits(tbl_node, "xml_missing") || is.null(tbl_node))
+        stop("Table 'data_table' not found in page response.")
+
+      data_table <- html_table(tbl_node, fill = TRUE)
 
       if (is.null(data_table) || nrow(data_table) < 12)
         stop("No data table or too few rows.")
@@ -177,7 +180,7 @@ update_nohrsc_data <- function(data_dir = "data") {
 
   if (!dir.exists(data_dir)) dir.create(data_dir, recursive = TRUE)
 
-  # File paths — all relative to data_dir
+  # File paths -- all relative to data_dir
   history_file  <- file.path(data_dir, "nohrsc_yakima_daily_FINAL.csv")
   subbasin_file <- file.path(data_dir, "nohrsc_yakima_subbasin_daily.csv")
   output_file   <- file.path(data_dir, "nohrsc_yakima_reservoir_daily.csv")
@@ -193,7 +196,7 @@ update_nohrsc_data <- function(data_dir = "data") {
     existing   <- read_csv(output_file, show_col_types = FALSE) %>%
       mutate(Date = as.Date(Date))
     date_start <- as.Date(max(existing$Date, na.rm = TRUE)) + 1L
-    message(sprintf("Reservoir file found through %s — fetching from %s onward",
+    message(sprintf("Reservoir file found through %s -- fetching from %s onward",
                     date_start - 1L, date_start))
     message(sprintf("Rows in existing file: %d", nrow(existing)))
 
@@ -203,14 +206,14 @@ update_nohrsc_data <- function(data_dir = "data") {
     date_start <- as.Date(max(hist_df$Date, na.rm = TRUE)) + 1L
     existing   <- NULL
     message(sprintf(
-      "Old history file found through %s — fetching from %s onward",
+      "Old history file found through %s -- fetching from %s onward",
       date_start - 1L, date_start))
     message("Note: old file schema incompatible; writing fresh reservoir file")
 
   } else {
     existing   <- NULL
     date_start <- as.Date("2012-10-01")
-    message("No existing files found — fetching full record from 2012-10-01")
+    message("No existing files found -- fetching full record from 2012-10-01")
   }
 
   date_end <- Sys.Date()
@@ -225,7 +228,7 @@ update_nohrsc_data <- function(data_dir = "data") {
                   as.integer(date_end - date_start) + 1L))
 
   # ---------------------------------------------------------------------------
-  # FETCH — split into yearly chunks (NOHRSC limit ~1 year per request)
+  # FETCH -- split into yearly chunks (NOHRSC limit ~1 year per request)
   # ---------------------------------------------------------------------------
 
   year_starts <- seq(date_start, date_end, by = "year")
@@ -257,7 +260,7 @@ update_nohrsc_data <- function(data_dir = "data") {
   }
 
   # ---------------------------------------------------------------------------
-  # STEP 1: Aggregate hourly → daily at sub-basin level
+  # STEP 1: Aggregate hourly -> daily at sub-basin level
   # ---------------------------------------------------------------------------
 
   new_subbasin <- bind_rows(all_hourly) %>%
@@ -289,7 +292,7 @@ update_nohrsc_data <- function(data_dir = "data") {
   message(sprintf("Sub-basin staging written to: %s", new_data_file))
 
   # ---------------------------------------------------------------------------
-  # STEP 2: Roll up sub-basin → reservoir level
+  # STEP 2: Roll up sub-basin -> reservoir level
   # ---------------------------------------------------------------------------
 
   new_reservoir <- new_subbasin %>%
@@ -361,10 +364,10 @@ update_nohrsc_data <- function(data_dir = "data") {
   if (file.exists(combined_file)) {
     ce_rows <- read_csv(combined_file, show_col_types = FALSE) %>%
       mutate(Date = as.Date(Date)) %>%
-      filter(source == "CE" | Date < nohrsc_start)
+      filter(source == "ClimateEngine" | Date < nohrsc_start)
   } else {
     ce_rows <- tibble()
-    message("  No existing combined file — NOHRSC data only")
+    message("  No existing combined file -- NOHRSC data only")
   }
 
   # Add system ALL totals to the reservoir file
@@ -421,6 +424,6 @@ update_nohrsc_data <- function(data_dir = "data") {
 if (sys.nframe() == 0L) {
   args     <- commandArgs(trailingOnly = TRUE)
   data_dir <- if (length(args) >= 1) args[1] else "data"
-  message(sprintf("Running standalone — data_dir = '%s'", data_dir))
+  message(sprintf("Running standalone -- data_dir = '%s'", data_dir))
   update_nohrsc_data(data_dir = data_dir)
 }
