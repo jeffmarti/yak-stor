@@ -79,6 +79,7 @@ jobs:
             echo "No data changes - skipping commit"
           else
             git commit -m "chore: daily data refresh $(date -u +%Y-%m-%d)"
+            git pull --rebase origin main
             git push origin HEAD
           fi
 
