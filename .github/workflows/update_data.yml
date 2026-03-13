@@ -9,12 +9,9 @@ jobs:
   update-and-deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-
     steps:
-
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
@@ -30,8 +27,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: r-pkgs-${{ runner.os }}-${{ hashFiles('**/DESCRIPTION') }}
-          restore-keys: r-pkgs-${{ runner.os }}-
+          key: r-pkgs-${{ runner.os }}
+          restore-keys: r-pkgs-
 
       - name: Install system libraries
         run: |
@@ -40,12 +37,14 @@ jobs:
 
       - name: Install R packages
         run: |
+          mkdir -p $R_LIBS_USER
           Rscript -e "
+            .libPaths(Sys.getenv('R_LIBS_USER'))
             pkgs <- c('tidyverse','lubridate','httr','jsonlite',
                       'shiny','plotly','conflicted','rsconnect',
                       'rvest','readr','dplyr','purrr')
             new <- pkgs[!(pkgs %in% installed.packages()[,'Package'])]
-            if (length(new)) install.packages(new, repos='https://cloud.r-project.org')
+            if (length(new)) install.packages(new, repos=Sys.getenv('RSPM','https://cloud.r-project.org'))
           "
 
       - name: Refresh data files
@@ -65,10 +64,11 @@ jobs:
 
       - name: Deploy to shinyapps.io
         env:
-          SHINYAPPS_TOKEN:  ${{ secrets.SHINYAPPS_TOKEN }}
+          SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
         run: |
           Rscript -e "
+            .libPaths(Sys.getenv('R_LIBS_USER'))
             rsconnect::setAccountInfo(
               name   = 'waterwater',
               token  = Sys.getenv('SHINYAPPS_TOKEN'),
