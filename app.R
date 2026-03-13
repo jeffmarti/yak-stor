@@ -66,11 +66,11 @@ ui <- fluidPage(
           "has been referred to as the sixth reservoir."
         ),
         tags$p(
-          "This dashboard combines daily reservoir storage from USBR Hydromet with ",
-          "estimates of snowpack volume using SNODAS data from the National",
-"Operational Hydrologic Remote Sensing Center (NOHRSC) and Climate Engine",
-          "to provide an estimate of total available water storage: snow storage +",
-           "the volume of water stored behind the five dams. The Climate Explorer places current ",
+          "This dashboard combines daily reservoir storage values from USBR Hydromet with ",
+          "modeled estimates of snowpack volume using SNODAS data from the National",
+"Operational Hydrologic Remote Sensing Center (NOHRSC) and Climate Engine.",
+          "This provides an overall estimate of total available water storage: snow storage +",
+           "reservoir storage. The Climate Explorer places current ",
           "conditions in historical context using East Cascades temperature and ",
           "precipitation anomalies from NOAA NCEI."
         ),
