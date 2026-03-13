@@ -1,3 +1,6 @@
+.libPaths(c(Sys.getenv("R_LIBS_USER"), .libPaths()))
+
+
 # ==============================================================================
 # update_pipeline.R
 #
