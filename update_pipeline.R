@@ -1,8 +1,5 @@
- 
 Sys.setenv(RENV_CONFIG_AUTO_ACTIVATE = "FALSE")
 .libPaths(c(Sys.getenv("R_LIBS_USER"), .libPaths()))
-
-
 
 # ==============================================================================
 # update_pipeline.R
@@ -13,9 +10,6 @@ Sys.setenv(RENV_CONFIG_AUTO_ACTIVATE = "FALSE")
 #
 # Usage (local):
 #   Rscript update_pipeline.R
-#
-# GitHub Actions runs this from the repo root. Working directory must be
-# the repo root so relative paths resolve correctly.
 # ==============================================================================
 
 suppressPackageStartupMessages({
