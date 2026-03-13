@@ -1,3 +1,5 @@
+ 
+Sys.setenv(RENV_CONFIG_AUTO_ACTIVATE = "FALSE")
 .libPaths(c(Sys.getenv("R_LIBS_USER"), .libPaths()))
 
 
