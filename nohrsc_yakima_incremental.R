@@ -361,14 +361,17 @@ update_nohrsc_data <- function(data_dir = "data") {
   nohrsc_start <- as.Date("2012-10-01")
 
   # Keep any CE rows that predate the NOHRSC period
-  if (file.exists(combined_file)) {
-    ce_rows <- read_csv(combined_file, show_col_types = FALSE) %>%
-      mutate(Date = as.Date(Date)) %>%
-      filter(source == "ClimateEngine" | Date < nohrsc_start)
-  } else {
-    ce_rows <- tibble()
-    message("  No existing combined file -- NOHRSC data only")
-  }
+ce_seed_file <- file.path(data_dir, "yakima_swe_ce_seed.csv")
+
+if (file.exists(ce_seed_file)) {
+  ce_rows <- read_csv(ce_seed_file, show_col_types = FALSE) %>%
+    mutate(Date = as.Date(Date))
+  message(sprintf("  CE seed: %d rows (%s to %s)",
+                  nrow(ce_rows), min(ce_rows$Date), max(ce_rows$Date)))
+} else {
+  ce_rows <- tibble()
+  message("  No CE seed file found -- NOHRSC data only")
+}
 
   # Add system ALL totals to the reservoir file
   all_total <- combined_res %>%
