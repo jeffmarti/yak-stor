@@ -9,27 +9,42 @@ jobs:
   update-and-deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_LIBS_USER: /home/runner/work/_temp/Library
+
     steps:
+      # ------------------------------------------------------------------------
+      # Checkout
+      # ------------------------------------------------------------------------
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # ------------------------------------------------------------------------
+      # R setup
+      # ------------------------------------------------------------------------
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
         with:
           r-version: '4.3'
           use-public-rspm: true
 
+      # ------------------------------------------------------------------------
+      # Cache R packages (now points to a real path)
+      # ------------------------------------------------------------------------
       - name: Cache R packages
         uses: actions/cache@v3
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: r-pkgs-${{ runner.os }}-v2
+          key: r-pkgs-${{ runner.os }}-v3
           restore-keys: r-pkgs-
 
+      # ------------------------------------------------------------------------
+      # System dependencies
+      # ------------------------------------------------------------------------
       - name: Install system libraries
         run: |
           sudo apt-get update -qq
@@ -40,26 +55,49 @@ jobs:
             libfreetype6-dev \
             libfontconfig1-dev
 
+      # ------------------------------------------------------------------------
+      # Install R packages INTO R_LIBS_USER
+      # ------------------------------------------------------------------------
       - name: Install R packages
         run: |
-          mkdir -p $R_LIBS_USER
+          mkdir -p "$R_LIBS_USER"
           Rscript -e "
             .libPaths(Sys.getenv('R_LIBS_USER'))
-            pkgs <- c('tidyverse','lubridate','httr','jsonlite',
-                      'shiny','plotly','conflicted','rsconnect',
-                      'rvest','readr','dplyr','purrr')
-            new <- pkgs[!(pkgs %in% installed.packages()[,'Package'])]
-            if (length(new)) install.packages(new, repos=Sys.getenv('RSPM','https://cloud.r-project.org'))
+
+            pkgs <- c(
+              'tidyverse','lubridate','httr','jsonlite',
+              'shiny','plotly','conflicted','rsconnect',
+              'rvest','readr','dplyr','purrr'
+            )
+
+            installed <- rownames(installed.packages())
+            new <- setdiff(pkgs, installed)
+
+            if (length(new)) {
+              install.packages(
+                new,
+                lib   = Sys.getenv('R_LIBS_USER'),
+                repos = Sys.getenv('RSPM')
+              )
+            }
           "
 
+      # ------------------------------------------------------------------------
+      # Run data pipeline
+      # ------------------------------------------------------------------------
       - name: Refresh data files
         run: Rscript update_pipeline.R
 
+      # ------------------------------------------------------------------------
+      # Commit refreshed data
+      # ------------------------------------------------------------------------
       - name: Commit data files
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
           git add data/*.csv
+
           if git diff --staged --quiet; then
             echo "No data changes - skipping commit"
           else
@@ -67,6 +105,9 @@ jobs:
             git push
           fi
 
+      # ------------------------------------------------------------------------
+      # Deploy to shinyapps.io
+      # ------------------------------------------------------------------------
       - name: Deploy to shinyapps.io
         env:
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
@@ -74,17 +115,19 @@ jobs:
         run: |
           Rscript -e "
             .libPaths(Sys.getenv('R_LIBS_USER'))
+
             rsconnect::setAccountInfo(
               name   = 'waterwater',
               token  = Sys.getenv('SHINYAPPS_TOKEN'),
               secret = Sys.getenv('SHINYAPPS_SECRET')
             )
+
             rsconnect::deployApp(
-              appDir      = '.',
-              appName     = 'yakima-storage',
-              account     = 'waterwater',
-              server      = 'shinyapps.io',
-              forceUpdate = TRUE,
-              launch.browser = FALSE
+              appDir          = '.',
+              appName         = 'yakima-storage',
+              account         = 'waterwater',
+              server          = 'shinyapps.io',
+              forceUpdate     = TRUE,
+              launch.browser  = FALSE
             )
           "
