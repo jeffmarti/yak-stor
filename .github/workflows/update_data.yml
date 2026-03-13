@@ -104,6 +104,7 @@ jobs:
               account        = 'waterwater',
               server         = 'shinyapps.io',
               forceUpdate    = TRUE,
+              lint           = FALSE,
               launch.browser = FALSE
             )
           "
