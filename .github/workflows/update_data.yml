@@ -85,9 +85,12 @@ jobs:
       # ------------------------------------------------------------------------
       # Run data pipeline
       # ------------------------------------------------------------------------
-      - name: Refresh data files
-        run: Rscript update_pipeline.R
-
+     - name: Refresh data files
+        run: |
+          Rscript -e "
+            .libPaths(c(Sys.getenv('R_LIBS_USER'), .libPaths()))
+            source('update_pipeline.R')
+          "
       # ------------------------------------------------------------------------
       # Commit refreshed data
       # ------------------------------------------------------------------------
