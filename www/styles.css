@@ -1,0 +1,91 @@
+/* =============================================================================
+   Yakima Basin Water Dashboard — styles.css
+   ============================================================================= */
+
+body {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13px;
+  background: #f5f7fa;
+}
+
+/* ── Page header ─────────────────────────────────────────────────────────── */
+.page-header {
+  background: #1a3a5c;
+  color: white;
+  padding: 10px 20px;
+  margin-bottom: 16px;
+  border-radius: 0 0 4px 4px;
+}
+.page-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+.sidebar-panel {
+  background: white;
+  border: 1px solid #dde2ea;
+  border-radius: 6px;
+  padding: 14px 16px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #333;
+  position: sticky;
+  top: 10px;
+}
+.sidebar-panel h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a3a5c;
+  margin-bottom: 8px;
+}
+.sidebar-panel p {
+  margin-bottom: 8px;
+}
+
+/* ── Main panel ──────────────────────────────────────────────────────────── */
+.main-panel {
+  background: white;
+  border: 1px solid #dde2ea;
+  border-radius: 6px;
+  padding: 0 14px 14px 14px;
+}
+
+/* ── Tab styling ─────────────────────────────────────────────────────────── */
+.nav-tabs {
+  border-bottom: 2px solid #1a3a5c;
+  margin-bottom: 0;
+}
+.nav-tabs > li > a {
+  color: #555;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 4px 4px 0 0;
+  padding: 7px 16px;
+}
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:focus,
+.nav-tabs > li.active > a:hover {
+  color: #1a3a5c;
+  background: white;
+  border-color: #1a3a5c #1a3a5c white;
+  font-weight: 700;
+}
+
+/* ── Control row (water year selector etc.) ──────────────────────────────── */
+.control-row {
+  background: #f4f7fb;
+  padding: 8px 14px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* ── Shiny progress bar ──────────────────────────────────────────────────── */
+.shiny-notification {
+  font-size: 12px;
+}
