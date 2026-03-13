@@ -11,15 +11,7 @@
 # GitHub Actions runs this from the repo root. Working directory must be
 # the repo root so relative paths resolve correctly.
 # =============================================================================
-- name: Install R packages
-        run: |
-          Rscript -e "
-            pkgs <- c('tidyverse','lubridate','httr','jsonlite',
-                      'shiny','plotly','conflicted','rsconnect',
-                      'rvest','readr','dplyr','purrr')
-            new  <- pkgs[!(pkgs %in% installed.packages()[,'Package'])]
-            if (length(new)) install.packages(new, repos='https://cloud.r-project.org')
-          "
+
 suppressPackageStartupMessages({
   library(tidyverse)
   library(lubridate)
@@ -152,4 +144,5 @@ for (f in c("yakima_dam_daily.csv", "yakima_swe_combined.csv",
     cat(sprintf("  %-35s  MISSING\n", f))
   }
 }
+
 
