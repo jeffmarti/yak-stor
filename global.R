@@ -269,14 +269,15 @@ precip_anom <- filter(monthly_anom, variable == "pcp")
 
 # ── Data freshness labels (used in UI footer)
 data_freshness <- list(
-  swe_through = format(max(swe_raw$Date, na.rm = TRUE), "%b %d, %Y"),
-  dam_through = format(max(dam_csv$Date,  na.rm = TRUE), "%b %d, %Y"),
- ncei_latest <- ncei_raw %>%
-  filter(variable == "tavg") %>%
-  arrange(desc(year), desc(month)) %>%
-  slice(1)
-ncei_through = paste0(month.abb[ncei_latest$month], " ", ncei_latest$year)
-  )
+  swe_through  = format(max(swe_raw$Date, na.rm = TRUE), "%b %d, %Y"),
+  dam_through  = format(max(dam_csv$Date,  na.rm = TRUE), "%b %d, %Y"),
+  ncei_through = {
+    ncei_latest <- ncei_raw %>%
+      filter(variable == "tavg") %>%
+      arrange(desc(year), desc(month)) %>%
+      slice(1)
+    paste0(month.abb[ncei_latest$month], " ", ncei_latest$year)
+  }
 )
 
 message(sprintf(
