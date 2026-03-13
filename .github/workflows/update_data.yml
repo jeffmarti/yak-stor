@@ -85,7 +85,12 @@ jobs:
             git rebase origin/main
             git push origin HEAD
           fi
-
+      - name: Verify global.R
+        run: |
+          echo "Line count of global.R:"
+          wc -l global.R
+          echo "Last 20 lines of global.R:"
+          tail -20 global.R
       - name: Deploy to shinyapps.io
         env:
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
