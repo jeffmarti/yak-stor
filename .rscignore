@@ -1,9 +1,8 @@
-
 .Rhistory
+.github/workflows/update_data.yml
 data/nohrsc_yakima_daily_FINAL.csv
 data/nohrsc_yakima_new_data.csv
 data/nohrsc_yakima_subbasin_daily.csv
-update_data.yml
 README.md
 nohrsc_yakima_incremental.R
 update_pipeline.R
