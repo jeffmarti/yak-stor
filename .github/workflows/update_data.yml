@@ -74,12 +74,13 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git fetch origin
+          git reset --soft origin/main
           git add data/*.csv
           if git diff --staged --quiet; then
             echo "No data changes - skipping commit"
           else
             git commit -m "chore: daily data refresh $(date -u +%Y-%m-%d)"
-            git pull --rebase origin main
             git push origin HEAD
           fi
 
