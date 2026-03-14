@@ -56,14 +56,14 @@ ui <- fluidPage(
 
         tags$p(
           "The Yakima Basin contains five federal reservoirs operated by the",
-          " U.S. Bureau of Reclamation: Bumping Lake, Cle Elum Lake,",
-          " Kachess Dam, Keechelus Lake, and Rimrock ",
+          "U.S. Bureau of Reclamation: Bumping Lake, Cle Elum Lake,",
+          "Kachess Dam, Keechelus Lake, and Rimrock.",
           "Total system capacity is approximately 1.07 million acre-feet."
         ),
         tags$p(
           "In addition to the five major constructed reservoirs, the basin depends",
-          "heavily on mountain snowpack. This snowpack constitutes a sixth major reservoir."
-        ),
+          "heavily on mountain snowpack. This snowpack constitutes a sixth major reservoir.",
+          ),
         tags$p(
           "This dashboard combines daily reservoir storage values from USBR Hydromet with ",
           "modeled estimates of snowpack volume using SNODAS data from the National",
