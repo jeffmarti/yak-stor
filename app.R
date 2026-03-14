@@ -4,18 +4,12 @@
 #
 # Structure:
 #   global.R               -- loads all pre-computed CSVs, shared data objects
+#   modules/mod_conditions.R -- Current Conditions tab
 #   modules/mod_storage.R  -- Storage Dashboard tab
 #   modules/mod_explorer.R -- Climate Explorer tab
 # ==============================================================================
 
-source("global.R")
-
-library(shiny)
-library(plotly)
-library(tidyverse)
-library(conflicted)
-
-
+source("modules/mod_conditions.R")
 source("modules/mod_storage.R")
 source("modules/mod_explorer.R")
 
@@ -33,7 +27,7 @@ ui <- fluidPage(
   div(class = "page-header",
     tags$h2("Yakima Basin Water Dashboard"),
     tags$p(
-      "Reservoir storage | Snow storage | Climate context",
+      "Reservoir storage | Snowpack | Climate context",
       style = "margin:0; font-size:12px; opacity:0.75;"
     )
   ),
@@ -52,31 +46,32 @@ ui <- fluidPage(
           style = "border-radius:4px; margin-bottom:12px; border:1px solid #ddd;"
         ),
 
-      tags$h4("About This Dashboard", style = "margin-top:0;"),
+        tags$h4("About This Dashboard", style = "margin-top:0;"),
 
-          tags$p(
-  "The Yakima Basin contains five federal reservoirs operated by the",
-  "U.S. Bureau of Reclamation: Bumping Lake, Cle Elum Lake,",
-  "Kachess Dam, Keechelus Lake, and Rimrock Lake.",
-  "Total system capacity is approximately 1.07 million acre-feet."
-),
-tags$p(
-  "Mountain snowpack functions as a sixth natural reservoir, storing winter",
-  "precipitation and releasing it gradually through the spring and summer",
-  "months."
-),
-tags$p(
-  "This dashboard combines daily reservoir storage from USBR Hydromet with",
-  "basin snowpack estimates derived from SNODAS data provided by the National",
-  "Operational Hydrologic Remote Sensing Center (NOHRSC) and Climate Engine.",
-  "Together these represent total constructed and natural water storage.",
-  "Note that this estimate does not include groundwater or soil moisture",
-  "recharged by rain and snowmelt infiltration."
-),
-tags$p(
-  "The Climate Explorer places current conditions in historical context",
-  "using East Cascades temperature and precipitation anomalies from NOAA NCEI."
-),
+        tags$p(
+          "The Yakima Basin contains five federal reservoirs operated by the",
+          "U.S. Bureau of Reclamation: Bumping Lake, Cle Elum Lake,",
+          "Kachess Dam, Keechelus Lake, and Rimrock Lake.",
+          "Total system capacity is approximately 1.07 million acre-feet."
+        ),
+        tags$p(
+          "Mountain snowpack functions as a sixth natural reservoir, storing winter",
+          "precipitation and releasing it gradually through the spring and summer",
+          "months when irrigation demand is highest."
+        ),
+        tags$p(
+          "This dashboard combines daily reservoir storage from USBR Hydromet with",
+          "basin snowpack estimates derived from SNODAS data provided by the National",
+          "Operational Hydrologic Remote Sensing Center (NOHRSC) and Climate Engine.",
+          "Together these represent total constructed and natural water storage.",
+          "Note that this estimate does not include groundwater or soil moisture",
+          "recharged by rain and snowmelt infiltration."
+        ),
+        tags$p(
+          "The Climate Explorer places current conditions in historical context",
+          "using East Cascades temperature and precipitation anomalies from NOAA NCEI."
+        ),
+
         tags$hr(style = "margin: 10px 0;"),
 
         # Data freshness
@@ -99,9 +94,7 @@ tags$p(
           tags$strong("Data Sources"), tags$br(),
           "USBR Hydromet (dam storage)", tags$br(),
           "NOHRSC / SNODAS (snowpack SWE)", tags$br(),
-          "NOAA NCEI Climate-at-a-Glance",
-          tags$br(),
-          "Contact: jeffjmarti at gmail.com"
+          "NOAA NCEI Climate-at-a-Glance"
         )
       )
     ),
@@ -112,6 +105,13 @@ tags$p(
         tabsetPanel(
           id   = "main_tabs",
           type = "tabs",
+
+          tabPanel(
+            title = "Current Conditions",
+            value = "conditions",
+            br(),
+            mod_conditions_ui("conditions")
+          ),
 
           tabPanel(
             title = "Storage Dashboard",
@@ -137,6 +137,7 @@ tags$p(
 # ------------------------------------------------------------------------------
 
 server <- function(input, output, session) {
+  mod_conditions_server("conditions")
   mod_storage_server("storage")
   mod_explorer_server("explorer")
 }
