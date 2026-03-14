@@ -59,17 +59,17 @@ reservoir_capacity <- c(
 )
 system_capacity <- reservoir_capacity[["ALL"]]
 
-col_dam        <- "#2166ac"
-col_snow       <- "#92c5de"
-col_capacity   <- "#d73027"
-col_dam_normal <- "#000000"
+col_dam         <- "#2166ac"
+col_snow        <- "#92c5de"
+col_capacity    <- "#d73027"
+col_dam_normal  <- "#000000"
 col_snow_normal <- "#4dac26"
-col_combined   <- "#762a83"
-col_warm       <- "#d73027"
-col_cool       <- "#2166ac"
-col_wet        <- "#1a9641"
-col_dry        <- "#c8a951"
-col_grid       <- "#eeeeee"
+col_combined    <- "#762a83"
+col_warm        <- "#d73027"
+col_cool        <- "#2166ac"
+col_wet         <- "#1a9641"
+col_dry         <- "#c8a951"
+col_grid        <- "#eeeeee"
 
 wy_months <- tibble(
   label     = c("Oct","Nov","Dec","Jan","Feb","Mar",
@@ -95,16 +95,22 @@ dam_csv  <- read_csv(dam_file,  show_col_types = FALSE) %>%
 
 ncei_raw <- read_csv(ncei_file, show_col_types = FALSE)
 
-# Align both data streams to the same end date
+# ------------------------------------------------------------------------------
+# ALIGN DATA STREAMS TO SAME END DATE
+# Prevents zero-drop at tail when one source is one day fresher than the other
+# ------------------------------------------------------------------------------
+
 max_date <- min(
   max(swe_raw$Date, na.rm = TRUE),
   max(dam_csv$Date, na.rm = TRUE)
 )
 
-message(sprintf("global.R: aligning data to %s", max_date))
+message(sprintf("global.R: aligning both data streams to %s",
+                format(max_date, "%b %d, %Y")))
 
 swe_raw <- swe_raw %>% filter(Date <= max_date)
 dam_csv <- dam_csv %>% filter(Date <= max_date)
+
 # ------------------------------------------------------------------------------
 # STORAGE MODULE DATA
 # ------------------------------------------------------------------------------
@@ -268,8 +274,8 @@ ncei_latest <- ncei_raw %>%
   slice(1)
 
 data_freshness <- list(
-  swe_through  = format(max(swe_raw$Date, na.rm = TRUE), "%b %d, %Y"),
-  dam_through  = format(max(dam_csv$Date,  na.rm = TRUE), "%b %d, %Y"),
+  swe_through  = format(max_date, "%b %d, %Y"),
+  dam_through  = format(max_date, "%b %d, %Y"),
   ncei_through = paste0(month.abb[ncei_latest$month], " ", ncei_latest$year)
 )
 
