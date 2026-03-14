@@ -95,6 +95,16 @@ dam_csv  <- read_csv(dam_file,  show_col_types = FALSE) %>%
 
 ncei_raw <- read_csv(ncei_file, show_col_types = FALSE)
 
+# Align both data streams to the same end date
+max_date <- min(
+  max(swe_raw$Date, na.rm = TRUE),
+  max(dam_csv$Date, na.rm = TRUE)
+)
+
+message(sprintf("global.R: aligning data to %s", max_date))
+
+swe_raw <- swe_raw %>% filter(Date <= max_date)
+dam_csv <- dam_csv %>% filter(Date <= max_date)
 # ------------------------------------------------------------------------------
 # STORAGE MODULE DATA
 # ------------------------------------------------------------------------------
