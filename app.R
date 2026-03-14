@@ -52,31 +52,31 @@ ui <- fluidPage(
           style = "border-radius:4px; margin-bottom:12px; border:1px solid #ddd;"
         ),
 
-        tags$h4("About This Dashboard", style = "margin-top:0;"),
+      tags$h4("About This Dashboard", style = "margin-top:0;"),
 
-        tags$p(
-          "The Yakima Basin contains five federal reservoirs operated by the",
-          "U.S. Bureau of Reclamation: Bumping Lake, Cle Elum Lake,",
-          "Kachess Dam, Keechelus Lake, and Rimrock.",
-          "Total system capacity is approximately 1.07 million acre-feet."
-        ),
-        tags$p(
-          "In addition to the five major constructed reservoirs, the basin depends",
-          "heavily on mountain snowpack. This snowpack constitutes a sixth major reservoir.",
-          ),
-        tags$p(
-          "This dashboard combines daily reservoir storage values from USBR Hydromet with ",
-          "modeled estimates of snowpack volume using SNODAS data from the National",
-"Operational Hydrologic Remote Sensing Center (NOHRSC) and Climate Engine.",
-          "This provides an overall estimate of total available water storage: snow storage +",
-           "reservoir storage."
-          
-           ), 
           tags$p(
-           "The Climate Explorer places current conditions in historical context",
-            "using East Cascades temperature and precipitation anomalies from NOAA NCEI."
-        ),
-
+  "The Yakima Basin contains five federal reservoirs operated by the",
+  "U.S. Bureau of Reclamation: Bumping Lake, Cle Elum Lake,",
+  "Kachess Dam, Keechelus Lake, and Rimrock Lake.",
+  "Total system capacity is approximately 1.07 million acre-feet."
+),
+tags$p(
+  "Mountain snowpack functions as a sixth natural reservoir, storing winter",
+  "precipitation and releasing it gradually through the spring and summer",
+  "months."
+),
+tags$p(
+  "This dashboard combines daily reservoir storage from USBR Hydromet with",
+  "basin snowpack estimates derived from SNODAS data provided by the National",
+  "Operational Hydrologic Remote Sensing Center (NOHRSC) and Climate Engine.",
+  "Together these represent total constructed and natural water storage.",
+  "Note that this estimate does not include groundwater or soil moisture",
+  "recharged by rain and snowmelt infiltration."
+),
+tags$p(
+  "The Climate Explorer places current conditions in historical context",
+  "using East Cascades temperature and precipitation anomalies from NOAA NCEI."
+),
         tags$hr(style = "margin: 10px 0;"),
 
         # Data freshness
