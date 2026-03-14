@@ -33,7 +33,7 @@ ui <- fluidPage(
   div(class = "page-header",
     tags$h2("Yakima Basin Water Dashboard"),
     tags$p(
-      "Reservoir storage | Snowpack | Climate context",
+      "Reservoir storage | Snow storage | Climate context",
       style = "margin:0; font-size:12px; opacity:0.75;"
     )
   ),
@@ -62,17 +62,19 @@ ui <- fluidPage(
         ),
         tags$p(
           "In addition to the five major constructed reservoirs, the basin depends",
-          "heavily on mountain snowpack. In the Yakima watershed, snowpack",
-          "has been referred to as the sixth reservoir."
+          "heavily on mountain snowpack. This snowpack constitutes a sixth major reservoir."
         ),
         tags$p(
           "This dashboard combines daily reservoir storage values from USBR Hydromet with ",
           "modeled estimates of snowpack volume using SNODAS data from the National",
 "Operational Hydrologic Remote Sensing Center (NOHRSC) and Climate Engine.",
           "This provides an overall estimate of total available water storage: snow storage +",
-           "reservoir storage. The Climate Explorer places current ",
-          "conditions in historical context using East Cascades temperature and ",
-          "precipitation anomalies from NOAA NCEI."
+           "reservoir storage."
+          
+           ), 
+          tags$p(
+           "The Climate Explorer places current conditions in historical context",
+            "using East Cascades temperature and precipitation anomalies from NOAA NCEI."
         ),
 
         tags$hr(style = "margin: 10px 0;"),
