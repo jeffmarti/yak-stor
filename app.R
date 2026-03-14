@@ -8,7 +8,7 @@
 #   modules/mod_storage.R  -- Storage Dashboard tab
 #   modules/mod_explorer.R -- Climate Explorer tab
 # ==============================================================================
-
+source("global.R")
 source("modules/mod_conditions.R")
 source("modules/mod_storage.R")
 source("modules/mod_explorer.R")
