@@ -103,12 +103,9 @@ ui <- fluidPage(
        tags$div(
           style = "font-size:10px; color:#888; line-height:1.6;",
           tags$strong("Contact"), tags$br(),
-          "jeffjmarti at gmail.com", tags$br()  # <-- remove trailing comma here
+          "jeffjmarti at gmail.com", tags$br() 
         )
-          
-        )
-          
-      )
+   )
     ),
 
     # Main content
