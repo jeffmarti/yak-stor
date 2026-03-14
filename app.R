@@ -60,11 +60,11 @@ ui <- fluidPage(
           "months when irrigation demand is highest."
         ),
         tags$p(
-          "This dashboard combines daily reservoir storage volume numbers from USBR Hydromet with",
+          "This dashboard combines daily reservoir storage from USBR Hydromet with",
           "basin snowpack estimates derived from SNODAS data provided by the National",
           "Operational Hydrologic Remote Sensing Center (NOHRSC) and Climate Engine.",
-          "Together these values represent total constructed and above-ground water storage.",
-          "Note that this estimate does not include groundwater or soil moisture",
+          "Together these numbers represent total constructed and above-ground water storage.",
+          "This estimate does not include groundwater or soil moisture",
           "recharged by rain and snowmelt infiltration."
         ),
         tags$p(
