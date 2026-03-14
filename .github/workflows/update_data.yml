@@ -71,20 +71,24 @@ jobs:
             source('update_pipeline.R')
           "
 
-      - name: Verify global.R
-        run: |
-          echo "Line count of global.R:"
-          wc -l global.R
-          echo "Last 20 lines of global.R:"
-          tail -20 global.R
-
       - name: Commit data files
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+
+          # Save freshly generated CSVs to temp location
+          mkdir -p /tmp/csv_backup
+          cp data/*.csv /tmp/csv_backup/
+
+          # Reset working tree to latest remote state (no merge conflicts)
           git fetch origin
-          git checkout origin/main -- .
+          git reset --hard origin/main
+
+          # Restore freshly generated CSVs
+          cp /tmp/csv_backup/*.csv data/
+
+          # Stage and commit only the CSVs
           git add data/*.csv
           if git diff --staged --quiet; then
             echo "No data changes - skipping commit"
@@ -93,12 +97,18 @@ jobs:
             git push origin HEAD
           fi
 
+      - name: Verify global.R
+        run: |
+          echo "Line count of global.R:"
+          wc -l global.R
+          echo "Last 20 lines of global.R:"
+          tail -20 global.R
+
       - name: Deploy to shinyapps.io
         env:
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
         run: |
-          find . -name "*.dcf" -path "*/rsconnect/*" -delete
           Rscript -e "
             .libPaths(c(Sys.getenv('R_LIBS_USER'), .libPaths()))
             rsconnect::setAccountInfo(
