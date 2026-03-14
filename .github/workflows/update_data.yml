@@ -71,31 +71,34 @@ jobs:
             source('update_pipeline.R')
           "
 
-      - name: Commit data files
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git add data/*.csv
-          if git diff --staged --quiet; then
-            echo "No data changes - skipping commit"
-          else
-            git commit -m "chore: daily data refresh $(date -u +%Y-%m-%d)"
-            git fetch origin
-            git rebase origin/main
-            git push origin HEAD
-          fi
       - name: Verify global.R
         run: |
           echo "Line count of global.R:"
           wc -l global.R
           echo "Last 20 lines of global.R:"
           tail -20 global.R
+
+      - name: Commit data files
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git fetch origin
+          git checkout origin/main -- .
+          git add data/*.csv
+          if git diff --staged --quiet; then
+            echo "No data changes - skipping commit"
+          else
+            git commit -m "chore: daily data refresh $(date -u +%Y-%m-%d)"
+            git push origin HEAD
+          fi
+
       - name: Deploy to shinyapps.io
         env:
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
         run: |
+          find . -name "*.dcf" -path "*/rsconnect/*" -delete
           Rscript -e "
             .libPaths(c(Sys.getenv('R_LIBS_USER'), .libPaths()))
             rsconnect::setAccountInfo(
