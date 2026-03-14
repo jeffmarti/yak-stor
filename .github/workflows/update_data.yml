@@ -119,6 +119,19 @@ jobs:
               server         = 'shinyapps.io',
               forceUpdate    = TRUE,
               lint           = FALSE,
-              launch.browser = FALSE
+              launch.browser = FALSE,
+              appFiles       = c(
+                'app.R',
+                'global.R',
+                'modules/mod_conditions.R',
+                'modules/mod_storage.R',
+                'modules/mod_explorer.R',
+                'www/styles.css',
+                'www/yakima_basin_map.png',
+                'data/yakima_swe_combined.csv',
+                'data/yakima_dam_daily.csv',
+                'data/ncei_climate_monthly.csv',
+                'data/yakima_swe_ce_seed.csv'
+              )
             )
           "
