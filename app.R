@@ -71,6 +71,7 @@ ui <- fluidPage(
           "The Climate Explorer places current conditions in historical context",
           "using East Cascades temperature and precipitation anomalies from NOAA NCEI."
         ),
+               
 
         tags$hr(style = "margin: 10px 0;"),
 
@@ -95,7 +96,18 @@ ui <- fluidPage(
           "USBR Hydromet (dam storage)", tags$br(),
           "NOHRSC / SNODAS (snowpack SWE)", tags$br(),
           "NOAA NCEI Climate-at-a-Glance"
+        ),
+        tags$hr(style = "margin: 10px 0;"),
+
+        # Contact
+       tags$div(
+          style = "font-size:10px; color:#888; line-height:1.6;",
+          tags$strong("Contact"), tags$br(),
+          "jeffjmarti at gmail.com", tags$br()  # <-- remove trailing comma here
         )
+          
+        )
+          
       )
     ),
 
