@@ -76,19 +76,11 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-
-          # Save freshly generated CSVs to temp location
           mkdir -p /tmp/csv_backup
           cp data/*.csv /tmp/csv_backup/
-
-          # Reset working tree to latest remote state (no merge conflicts)
           git fetch origin
           git reset --hard origin/main
-
-          # Restore freshly generated CSVs
           cp /tmp/csv_backup/*.csv data/
-
-          # Stage and commit only the CSVs
           git add data/*.csv
           if git diff --staged --quiet; then
             echo "No data changes - skipping commit"
