@@ -101,6 +101,10 @@ jobs:
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
         run: |
+          echo "=== global.R line count at deploy time ==="
+          wc -l global.R
+          echo "=== last 5 lines ==="
+          tail -5 global.R
           Rscript -e "
             .libPaths(c(Sys.getenv('R_LIBS_USER'), .libPaths()))
             rsconnect::setAccountInfo(
