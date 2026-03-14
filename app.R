@@ -105,21 +105,21 @@ ui <- fluidPage(
         tabsetPanel(
           id   = "main_tabs",
           type = "tabs",
-
-          tabPanel(
-            title = "Current Conditions",
-            value = "conditions",
-            br(),
-            mod_conditions_ui("conditions")
-          ),
-
+        
           tabPanel(
             title = "Storage Dashboard",
             value = "storage",
             br(),
             mod_storage_ui("storage")
           ),
-
+        
+          tabPanel(
+            title = "Current Conditions",
+            value = "conditions",
+            br(),
+            mod_conditions_ui("conditions")
+          ),
+        
           tabPanel(
             title = "Climate Explorer",
             value = "explorer",
