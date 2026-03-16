@@ -115,6 +115,6 @@ GitHub Actions (05:42 UTC)
             rsconnect::deployApp()
                     ↓
     global.R reads CSVs (fast, no API calls)
-            ↓               ↓
-    mod_storage.R    mod_explorer.R
+            ↓               ↓               ↓
+    mod_storage.R    mod_explorer.R    mod_conditions.R
 ```
