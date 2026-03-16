@@ -73,8 +73,8 @@ GitHub Actions (05:42 UTC)
             rsconnect::deployApp()
                     ↓
     global.R reads CSVs (fast, no API calls)
-            ↓               ↓
-    mod_storage.R    mod_explorer.R
+            ↓               ↓               ↓
+    mod_storage.R    mod_explorer.R    mod_conditions.R
 ```
 ### 4. Add basin map image
 
@@ -87,34 +87,4 @@ or deploy manually:
 
 ```r
 rsconnect::deployApp(appName = "yakima-storage", account = "waterwater")
-```
-
----
-
-## Data sources
-
-| Data | Source | Update frequency |
-|------|--------|-----------------|
-| Dam storage | [USBR Hydromet](https://www.usbr.gov/pn-bin/daily.pl) | Daily |
-| Snowpack SWE | [NOHRSC graph_only.php](https://www.nohrsc.noaa.gov/) | Daily |
-| Climate | [NOAA NCEI Climate-at-a-Glance](https://www.ncei.noaa.gov/access/monitoring/) | Monthly |
-
----
-
-## Data flow
-
-```
-GitHub Actions (05:42 UTC)
-    └── update_pipeline.R
-            ├── fetch_usbr_storage()   → data/yakima_dam_daily.csv
-            ├── update_nohrsc_data()   → data/yakima_swe_combined.csv
-            └── fetch_ncei_month()     → data/ncei_climate_monthly.csv
-                    ↓
-            git commit + push
-                    ↓
-            rsconnect::deployApp()
-                    ↓
-    global.R reads CSVs (fast, no API calls)
-            ↓               ↓               ↓
-    mod_storage.R    mod_explorer.R    mod_conditions.R
 ```
