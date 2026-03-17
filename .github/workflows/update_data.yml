@@ -2,7 +2,7 @@ name: Daily data update + deploy
 
 on:
   schedule:
-    - cron: '30 10 * * *'
+    - cron: '42 5 * * *'
   workflow_dispatch:
 
 permissions:
@@ -131,7 +131,8 @@ jobs:
                 'data/yakima_swe_combined.csv',
                 'data/yakima_dam_daily.csv',
                 'data/ncei_climate_monthly.csv',
-                'data/yakima_swe_ce_seed.csv'
+                'data/yakima_swe_ce_seed.csv',
+                'data/nwrfc_runoff_monthly.csv'
               )
             )
           "
