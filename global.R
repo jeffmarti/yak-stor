@@ -95,6 +95,31 @@ dam_csv  <- read_csv(dam_file,  show_col_types = FALSE) %>%
 
 ncei_raw <- read_csv(ncei_file, show_col_types = FALSE)
 
+# -- NWRFC monthly runoff
+runoff_file <- file.path(data_dir, "nwrfc_runoff_monthly.csv")
+if (!file.exists(runoff_file)) stop("Missing: ", runoff_file)
+
+runoff_raw <- read_csv(runoff_file, show_col_types = FALSE)
+
+# Compute 1991-2020 monthly normals for system total
+runoff_normal <- runoff_raw %>%
+  filter(reservoir == "ALL",
+         year >= NORMAL_START,
+         year <= NORMAL_END) %>%
+  group_by(month) %>%
+  summarise(normal_af = mean(volume_af, na.rm = TRUE), .groups = "drop")
+
+# System runoff with anomaly -- filtered to PLOT_START year
+runoff_system <- runoff_raw %>%
+  filter(reservoir == "ALL",
+         year >= year(PLOT_START)) %>%
+  left_join(runoff_normal, by = "month") %>%
+  mutate(
+    bar_date  = as.Date(ISOdate(year, month, 15)),
+    anomaly   = volume_af - normal_af
+  ) %>%
+  filter(bar_date >= PLOT_START) %>%
+  arrange(bar_date)
 # ------------------------------------------------------------------------------
 # ALIGN DATA STREAMS TO SAME END DATE
 # Prevents zero-drop at tail when one source is one day fresher than the other
