@@ -22,6 +22,7 @@ suppressPackageStartupMessages({
 # -- Source fetch functions ----------------------------------------------------
 source("fetch_usbr_storage.R")
 source("nohrsc_yakima_incremental.R")
+source("fetch_nwrfc_runoff.R")
 
 cat(sprintf("\n=== Yakima data pipeline -- %s ===\n\n", Sys.time()))
 
@@ -115,7 +116,18 @@ if (!is.null(ncei_raw) && nrow(ncei_raw) > 0) {
 } else {
   cat("  SKIPPED -- fetch returned no data\n")
 }
+# ==============================================================================
+# 4. NWRFC MONTHLY RUNOFF
+# ==============================================================================
 
+cat("\nStep 4: Fetching NWRFC monthly runoff...\n")
+
+tryCatch({
+  fetch_nwrfc_runoff(data_dir = data_dir)
+  cat("  NWRFC runoff update complete\n")
+}, error = function(e) {
+  cat("  ERROR in NWRFC runoff fetch:", conditionMessage(e), "\n")
+})
 # ==============================================================================
 # SUMMARY
 # ==============================================================================
