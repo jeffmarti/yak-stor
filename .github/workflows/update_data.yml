@@ -126,6 +126,7 @@ jobs:
                 'modules/mod_conditions.R',
                 'modules/mod_storage.R',
                 'modules/mod_explorer.R',
+                'modules/mod_forecast.R',
                 'www/styles.css',
                 'www/yakima_basin_map.png',
                 'data/yakima_swe_combined.csv',
