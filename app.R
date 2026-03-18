@@ -3,15 +3,18 @@
 # https://waterwater.shinyapps.io/yakima-storage
 #
 # Structure:
-#   global.R               -- loads all pre-computed CSVs, shared data objects
+#   global.R                 -- loads all pre-computed CSVs, shared data objects
 #   modules/mod_conditions.R -- Current Conditions tab
-#   modules/mod_storage.R  -- Storage Dashboard tab
-#   modules/mod_explorer.R -- Climate Explorer tab
+#   modules/mod_storage.R    -- Storage Dashboard tab
+#   modules/mod_explorer.R   -- Climate Explorer tab
+#   modules/mod_forecast.R   -- Runoff Outlook tab
 # ==============================================================================
+
 source("global.R")
 source("modules/mod_conditions.R")
 source("modules/mod_storage.R")
 source("modules/mod_explorer.R")
+source("modules/mod_forecast.R")
 
 # ------------------------------------------------------------------------------
 # UI
@@ -39,7 +42,6 @@ ui <- fluidPage(
     column(3,
       div(class = "sidebar-panel",
 
-        # Basin map
         tags$img(
           src   = "yakima_basin_map.png",
           width = "100%",
@@ -63,19 +65,17 @@ ui <- fluidPage(
           "This dashboard combines daily reservoir storage from USBR Hydromet with",
           "basin snowpack estimates derived from SNODAS data provided by the National",
           "Operational Hydrologic Remote Sensing Center (NOHRSC) and Climate Engine.",
-          "Together these numbers represent total constructed and above-ground water storage.",
-          "This estimate does not include groundwater or soil moisture",
+          "Together these represent total constructed and natural water storage.",
+          "Note that this estimate does not include groundwater or soil moisture",
           "recharged by rain and snowmelt infiltration."
         ),
         tags$p(
           "The Climate Explorer places current conditions in historical context",
           "using East Cascades temperature and precipitation anomalies from NOAA NCEI."
         ),
-               
 
         tags$hr(style = "margin: 10px 0;"),
 
-        # Data freshness
         tags$div(
           style = "font-size:10px; color:#666; line-height:1.6;",
           tags$strong("Data updated daily"),
@@ -89,24 +89,25 @@ ui <- fluidPage(
 
         tags$hr(style = "margin: 10px 0;"),
 
-        # Sources
         tags$div(
           style = "font-size:10px; color:#888; line-height:1.6;",
           tags$strong("Data Sources"), tags$br(),
           "USBR Hydromet (dam storage)", tags$br(),
           "NOHRSC / SNODAS (snowpack SWE)", tags$br(),
-          "NOAA NCEI Climate-at-a-Glance"
+          "NOAA NCEI Climate-at-a-Glance", tags$br(),
+          "NWRFC (monthly runoff)"
         ),
+
         tags$hr(style = "margin: 10px 0;"),
 
-        # Contact
-       tags$div(
+        tags$div(
           style = "font-size:10px; color:#888; line-height:1.6;",
           tags$strong("Contact"), tags$br(),
-          "jeffjmarti at gmail.com", tags$br() 
+          "jeffjmarti at gmail.com", tags$br()
         )
-   )
-    ),
+
+      )  # closes sidebar-panel div
+    ),   # closes column(3)
 
     # Main content
     column(9,
@@ -114,41 +115,52 @@ ui <- fluidPage(
         tabsetPanel(
           id   = "main_tabs",
           type = "tabs",
-        
+
           tabPanel(
             title = "Storage Dashboard",
             value = "storage",
             br(),
             mod_storage_ui("storage")
           ),
-        
+
           tabPanel(
             title = "Current Conditions",
             value = "conditions",
             br(),
             mod_conditions_ui("conditions")
           ),
-        
+
           tabPanel(
             title = "Climate Explorer",
             value = "explorer",
             br(),
             mod_explorer_ui("explorer")
+          ),
+
+          tabPanel(
+            title = "Runoff Outlook",
+            value = "forecast",
+            br(),
+            mod_forecast_ui("forecast")
           )
-        )
-      )
-    )
-  )
-)
+
+        )  # closes tabsetPanel
+      )    # closes main-panel div
+    )      # closes column(9)
+
+  )  # closes fluidRow
+
+)  # closes fluidPage
 
 # ------------------------------------------------------------------------------
 # Server
 # ------------------------------------------------------------------------------
 
 server <- function(input, output, session) {
-  mod_conditions_server("conditions")
   mod_storage_server("storage")
+  mod_conditions_server("conditions")
   mod_explorer_server("explorer")
+  mod_forecast_server("forecast")
 }
 
 # ------------------------------------------------------------------------------
