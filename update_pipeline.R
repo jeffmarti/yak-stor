@@ -74,36 +74,50 @@ tryCatch({
 
 cat("\nStep 3: Fetching NCEI monthly climate...\n")
 
-DIVISION <- "4506"
-
-fetch_ncei_month <- function(variable, month,
-                              start_yr = 1895,
-                              end_yr   = as.integer(format(Sys.Date(), "%Y"))) {
+fetch_ncei_csv <- function(variable) {
   url <- sprintf(
     paste0("https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/",
-           "divisional/time-series/%s/%s/1/%d/%d-%d/data.json"),
-    DIVISION, variable, month, start_yr, end_yr
+           "divisional/time-series/4506/%s/1/0/1895-2026/data.csv",
+           "?base_prd=true&begbaseyear=1991&endbaseyear=2020"),
+    variable
   )
+
   resp <- tryCatch(httr::GET(url, httr::timeout(30)), error = function(e) NULL)
   if (is.null(resp) || httr::status_code(resp) != 200) {
-    warning(sprintf("NCEI fetch failed: %s month %02d", variable, month))
+    warning(sprintf("NCEI CSV fetch failed for variable: %s", variable))
     return(NULL)
   }
-  obj <- jsonlite::fromJSON(httr::content(resp, as = "text", encoding = "UTF-8"))
-  tibble(
-    yyyymm   = names(obj$data),
-    value    = purrr::map_dbl(obj$data, ~ .x$value),
-    variable = variable,
-    month    = as.integer(substr(names(obj$data), 5, 6)),
-    year     = as.integer(substr(names(obj$data), 1, 4))
-  ) %>% dplyr::filter(!is.na(value))
+
+  text <- httr::content(resp, as = "text", encoding = "UTF-8")
+
+  # Strip comment lines (start with #)
+  lines      <- strsplit(text, "\n")[[1]]
+  data_lines <- lines[!startsWith(trimws(lines), "#") & nchar(trimws(lines)) > 0]
+  clean_text <- paste(data_lines, collapse = "\n")
+
+  df <- tryCatch(
+    read.csv(text = clean_text, stringsAsFactors = FALSE),
+    error = function(e) { warning("CSV parse failed: ", e$message); NULL }
+  )
+  if (is.null(df) || nrow(df) == 0) return(NULL)
+
+  # CSV columns: Date (YYYYMM integer), Value, Anomaly
+  df %>%
+    rename(yyyymm = Date, value = Value, anomaly = Anomaly) %>%
+    mutate(
+      yyyymm   = sprintf("%06d", as.integer(yyyymm)),  # zero-pad e.g. "198901"
+      variable = variable,
+      year     = as.integer(substr(yyyymm, 1, 4)),
+      month    = as.integer(substr(yyyymm, 5, 6))      # "09" -> 9, "01" -> 1
+    ) %>%
+    filter(!is.na(value), value > -99)
 }
 
 ncei_raw <- tryCatch({
-  bind_rows(
-    purrr::map_dfr(1:12, ~ { Sys.sleep(0.15); fetch_ncei_month("tavg", .x) }),
-    purrr::map_dfr(1:12, ~ { Sys.sleep(0.15); fetch_ncei_month("pcp",  .x) })
-  )
+  tavg <- fetch_ncei_csv("tavg")
+  Sys.sleep(0.5)
+  pcp  <- fetch_ncei_csv("pcp")
+  bind_rows(tavg, pcp)
 }, error = function(e) {
   cat("  ERROR fetching NCEI:", conditionMessage(e), "\n")
   NULL
@@ -111,8 +125,10 @@ ncei_raw <- tryCatch({
 
 if (!is.null(ncei_raw) && nrow(ncei_raw) > 0) {
   write_csv(ncei_raw, file.path(data_dir, "ncei_climate_monthly.csv"))
-  cat(sprintf("  Saved %d rows  (tavg + pcp, 1895-%d)\n",
+  cat(sprintf("  Saved %d rows  (tavg + pcp, all months, 1895-%d)\n",
               nrow(ncei_raw), max(ncei_raw$year)))
+  cat(sprintf("  Months present: %s\n",
+              paste(sort(unique(ncei_raw$month)), collapse = ", ")))
 } else {
   cat("  SKIPPED -- fetch returned no data\n")
 }
