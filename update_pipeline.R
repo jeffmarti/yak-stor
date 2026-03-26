@@ -74,63 +74,126 @@ tryCatch({
 
 cat("\nStep 3: Fetching NCEI monthly climate...\n")
 
-fetch_ncei_csv <- function(variable) {
+fetch_ncei_csv <- function(variable, max_retries = 3, timeout_sec = 90) {
   url <- sprintf(
     paste0("https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/",
            "divisional/time-series/4506/%s/1/0/1895-2026/data.csv",
            "?base_prd=true&begbaseyear=1991&endbaseyear=2020"),
     variable
   )
-
-  resp <- tryCatch(httr::GET(url, httr::timeout(30)), error = function(e) NULL)
+  
+  resp <- NULL
+  for (attempt in seq_len(max_retries)) {
+    cat(sprintf("  NCEI %s: attempt %d/%d...\n", variable, attempt, max_retries))
+    resp <- tryCatch(
+      httr::GET(url, httr::timeout(timeout_sec)),
+      error = function(e) {
+        cat(sprintf("  Attempt %d failed: %s\n", attempt, e$message))
+        NULL
+      }
+    )
+    if (!is.null(resp) && httr::status_code(resp) == 200) break
+    if (attempt < max_retries) {
+      wait <- attempt * 10  # 10s, 20s between retries
+      cat(sprintf("  Waiting %ds before retry...\n", wait))
+      Sys.sleep(wait)
+    }
+  }
+  
   if (is.null(resp) || httr::status_code(resp) != 200) {
-    warning(sprintf("NCEI CSV fetch failed for variable: %s", variable))
+    warning(sprintf("NCEI CSV fetch failed after %d attempts: %s",
+                    max_retries, variable))
     return(NULL)
   }
-
+  
   text <- httr::content(resp, as = "text", encoding = "UTF-8")
-
+  
   # Strip comment lines (start with #)
   lines      <- strsplit(text, "\n")[[1]]
   data_lines <- lines[!startsWith(trimws(lines), "#") & nchar(trimws(lines)) > 0]
   clean_text <- paste(data_lines, collapse = "\n")
-
+  
   df <- tryCatch(
     read.csv(text = clean_text, stringsAsFactors = FALSE),
     error = function(e) { warning("CSV parse failed: ", e$message); NULL }
   )
   if (is.null(df) || nrow(df) == 0) return(NULL)
-
-  # CSV columns: Date (YYYYMM integer), Value, Anomaly
+  
   df %>%
     rename(yyyymm = Date, value = Value, anomaly = Anomaly) %>%
     mutate(
-      yyyymm   = sprintf("%06d", as.integer(yyyymm)),  # zero-pad e.g. "198901"
+      yyyymm   = sprintf("%06d", as.integer(yyyymm)),
       variable = variable,
       year     = as.integer(substr(yyyymm, 1, 4)),
-      month    = as.integer(substr(yyyymm, 5, 6))      # "09" -> 9, "01" -> 1
+      month    = as.integer(substr(yyyymm, 5, 6))
     ) %>%
     filter(!is.na(value), value > -99)
 }
 
-ncei_raw <- tryCatch({
-  tavg <- fetch_ncei_csv("tavg")
-  Sys.sleep(0.5)
-  pcp  <- fetch_ncei_csv("pcp")
-  bind_rows(tavg, pcp)
-}, error = function(e) {
-  cat("  ERROR fetching NCEI:", conditionMessage(e), "\n")
-  NULL
-})
+# NCEI publishes monthly updates around the 8th-10th of each month
+# Only fetch if: (1) we're on/after the 10th, AND
+#                (2) we don't already have current month's data
 
-if (!is.null(ncei_raw) && nrow(ncei_raw) > 0) {
-  write_csv(ncei_raw, file.path(data_dir, "ncei_climate_monthly.csv"))
-  cat(sprintf("  Saved %d rows  (tavg + pcp, all months, 1895-%d)\n",
-              nrow(ncei_raw), max(ncei_raw$year)))
-  cat(sprintf("  Months present: %s\n",
-              paste(sort(unique(ncei_raw$month)), collapse = ", ")))
+ncei_file         <- file.path(data_dir, "ncei_climate_monthly.csv")
+ncei_needs_update <- FALSE
+today             <- Sys.Date()
+current_month     <- format(today, "%Y-%m")
+day_of_month      <- as.integer(format(today, "%d"))
+
+if (day_of_month >= 10) {
+  if (!file.exists(ncei_file)) {
+    cat("  NCEI CSV missing -- will fetch\n")
+    ncei_needs_update <- TRUE
+  } else {
+    existing <- tryCatch(
+      read_csv(ncei_file, show_col_types = FALSE),
+      error = function(e) NULL
+    )
+    if (is.null(existing) || nrow(existing) == 0) {
+      cat("  NCEI CSV empty or unreadable -- will fetch\n")
+      ncei_needs_update <- TRUE
+    } else {
+      last_modified      <- file.info(ncei_file)$mtime
+      updated_this_month <- format(last_modified, "%Y-%m") == current_month
+      if (updated_this_month) {
+        cat(sprintf("  NCEI already updated this month (%s) -- skipping\n",
+                    current_month))
+      } else {
+        cat(sprintf("  NCEI not yet updated for %s -- will fetch\n",
+                    current_month))
+        ncei_needs_update <- TRUE
+      }
+    }
+  }
 } else {
-  cat("  SKIPPED -- fetch returned no data\n")
+  cat(sprintf("  NCEI update not expected until ~10th (today is %s) -- skipping\n",
+              format(today, "%b %d")))
+}
+
+if (ncei_needs_update) {
+  ncei_raw <- tryCatch({
+    tavg <- fetch_ncei_csv("tavg")
+    Sys.sleep(0.5)
+    pcp  <- fetch_ncei_csv("pcp")
+    bind_rows(tavg, pcp)
+  }, error = function(e) {
+    cat("  ERROR fetching NCEI:", conditionMessage(e), "\n")
+    NULL
+  })
+  
+  if (!is.null(ncei_raw) && nrow(ncei_raw) > 0) {
+    write_csv(ncei_raw, ncei_file)
+    cat(sprintf("  Saved %d rows  (tavg + pcp, all months, 1895-%d)\n",
+                nrow(ncei_raw), max(ncei_raw$year)))
+    cat(sprintf("  Months present: %s\n",
+                paste(sort(unique(ncei_raw$month)), collapse = ", ")))
+  } else {
+    if (file.exists(ncei_file)) {
+      cat("  WARNING: fetch failed -- retaining existing CSV\n")
+    } else {
+      cat("  WARNING: fetch failed and no existing CSV -- NCEI data unavailable\n")
+    }
+  }
 }
 # ==============================================================================
 # 4. NWRFC MONTHLY RUNOFF
