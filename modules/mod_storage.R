@@ -220,10 +220,10 @@ make_storage_plot <- function(wy) {
         text = paste0(
           "<b>Yakima Basin Water Storage \u2014 Water Year ", wy, "</b><br>",
           "<sup>Blue = dam storage \u00a0|\u00a0 ",
-          "Light blue = snow storage (SWE) \u00a0|\u00a0 ",
+          "Light blue = snow (SWE) stacked \u00a0|\u00a0 ",
           "Red dashed = dam capacity \u00a0|\u00a0 ",
           "Black dashed = dam avg (1991\u20132020) \u00a0|\u00a0 ",
-          "Green dashed = snow avg (2004\u20132025)</sup>"
+          "Green dashed = snow avg (not stacked) (2004\u20132025)</sup>"
         ),
         x = 0.5, font = list(size = 13)
       ),

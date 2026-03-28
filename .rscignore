@@ -7,3 +7,4 @@ README.md
 nohrsc_yakima_incremental.R
 update_pipeline.R
 fetch_usbr_storage.R
+.RData
