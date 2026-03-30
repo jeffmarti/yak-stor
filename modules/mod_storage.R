@@ -96,14 +96,23 @@ make_storage_plot <- function(wy) {
     xd        <- x_domains[[grid[[i]]$xi]]
     yd        <- y_domains[[grid[[i]]$yi]]
 
-    d      <- plot_data   %>% filter(water_year == wy, reservoir == res_code) %>% arrange(wy_day)
-    d_norm <- dam_normal  %>% filter(reservoir == res_code) %>% arrange(wy_day)
-    s_norm <- snow_normal %>% filter(reservoir == res_code) %>% arrange(wy_day)
-
+  
+    d      <- plot_data   %>% filter(water_year == wy, reservoir == res_code) %>%
+      arrange(wy_day) %>%
+      mutate(x_date = as.Date(paste0(wy - 1, "-10-01")) + wy_day - 1)
+    
+    d_norm <- dam_normal  %>% filter(reservoir == res_code) %>%
+      arrange(wy_day) %>%
+      mutate(x_date = as.Date(paste0(wy - 1, "-10-01")) + wy_day - 1)
+    
+    s_norm <- snow_normal %>% filter(reservoir == res_code) %>%
+      arrange(wy_day) %>%
+      mutate(x_date = as.Date(paste0(wy - 1, "-10-01")) + wy_day - 1)
+    
     # ── Dam storage fill (0 → dam_top) ──────────────────────────────────────
     fig <- fig %>% add_trace(
       data          = d,
-      x             = ~wy_day, y = ~dam_top,
+      x             = ~x_date, y = ~dam_top,
       xaxis         = xref, yaxis = yref,
       type          = "scatter", mode = "none",
       fill          = "tozeroy",
@@ -111,6 +120,7 @@ make_storage_plot <- function(wy) {
       name          = "Dam Storage",
       showlegend    = show_leg,
       legendgroup   = "dam",
+     
       hovertemplate = "Dam Storage: %{y:,.0f} AF<extra></extra>"
     )
 
@@ -126,7 +136,7 @@ make_storage_plot <- function(wy) {
     )
     fig <- fig %>% add_trace(
       data          = d,
-      x             = ~wy_day, y = ~snow_top,
+      x             = ~x_date, y = ~snow_top,
       xaxis         = xref, yaxis = yref,
       type          = "scatter", mode = "none",
       fill          = "tonexty",
@@ -135,38 +145,42 @@ make_storage_plot <- function(wy) {
       showlegend    = show_leg,
       legendgroup   = "snow",
       text          = ~snow_hover,
-      hovertemplate = "%{text}<extra></extra>"
+     
+      hovertemplate = "%{text}<extra></extra>"   # snow (uses the pre-built text field)
     )
 
     # ── Dam Avg 1991–2020 (black dashed) ─────────────────────────────────────
     fig <- fig %>% add_trace(
       data          = d_norm,
-      x             = ~wy_day, y = ~dam_normal_af,
+      x            = ~x_date, y = ~dam_normal_af,
       xaxis         = xref, yaxis = yref,
       type          = "scatter", mode = "lines",
       line          = list(color = col_dam_normal, width = 1.2, dash = "dash"),
       name          = "Dam Avg (1991\u20132020)",
       showlegend    = show_leg,
       legendgroup   = "dam_normal",
+     
       hovertemplate = "Dam Avg (1991\u20132020): %{y:,.0f} AF<extra></extra>"
     )
 
     # ── Snow Avg 2004–2025 (green dashed) ────────────────────────────────────
     fig <- fig %>% add_trace(
       data          = s_norm,
-      x             = ~wy_day, y = ~snow_normal_af,
+      x             = ~x_date, y = ~snow_normal_af,
       xaxis         = xref, yaxis = yref,
       type          = "scatter", mode = "lines",
       line          = list(color = col_snow_normal, width = 1.2, dash = "dash"),
       name          = "Snow Avg (2004\u20132025)",
       showlegend    = show_leg,
       legendgroup   = "snow_normal",
+     
       hovertemplate = "Snow Avg (2004\u20132025): %{y:,.0f} AF<extra></extra>"
     )
 
     # ── Dam Capacity (red dashed) ─────────────────────────────────────────────
     fig <- fig %>% add_segments(
-      x    = 1,   xend = 366,
+      x    = as.Date(paste0(wy - 1, "-10-01")),
+      xend = as.Date(paste0(wy,     "-09-30")),
       y    = cap, yend = cap,
       xaxis = xref, yaxis = yref,
       line          = list(color = col_capacity, width = 1.2, dash = "dash"),
@@ -191,16 +205,22 @@ make_storage_plot <- function(wy) {
     )
 
     # ── Axis definitions ──────────────────────────────────────────────────────
+    # Build month-start dates for this water year
+    month_tick_dates <- as.Date(paste0(wy - 1, "-10-01")) + wy_months$day_start - 1
+    
     all_axes[[xax_name]] <- list(
-      domain   = xd,
-      anchor   = yref,
-      tickmode = "array",
-      tickvals = wy_months$day_start,
-      ticktext = wy_months$label,
-      range    = c(0, 367),
-      showgrid = FALSE,
-      tickfont = list(size = 8),
-      title    = ""
+      domain      = xd,
+      anchor      = yref,
+      type        = "date",
+      tickmode    = "array",
+      tickvals    = as.numeric(month_tick_dates) * 86400000,
+      ticktext    = wy_months$label,
+      range       = c(as.numeric(as.Date(paste0(wy - 1, "-10-01"))) * 86400000,
+                      as.numeric(as.Date(paste0(wy,     "-09-30"))) * 86400000),
+      hoverformat = "%b %d",
+      showgrid    = FALSE,
+      tickfont    = list(size = 8),
+      title       = ""
     )
     all_axes[[yax_name]] <- list(
       domain     = yd,
@@ -210,6 +230,7 @@ make_storage_plot <- function(wy) {
       tickfont   = list(size = 8),
       title      = ""
     )
+    
   }
 
   final_layout <- c(
