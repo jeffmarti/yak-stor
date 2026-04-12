@@ -94,7 +94,7 @@ fetch_ncei_csv <- function(variable, max_retries = 3, timeout_sec = 90) {
     )
     if (!is.null(resp) && httr::status_code(resp) == 200) break
     if (attempt < max_retries) {
-      wait <- attempt * 10  # 10s, 20s between retries
+      wait <- attempt * 10
       cat(sprintf("  Waiting %ds before retry...\n", wait))
       Sys.sleep(wait)
     }
@@ -108,7 +108,6 @@ fetch_ncei_csv <- function(variable, max_retries = 3, timeout_sec = 90) {
   
   text <- httr::content(resp, as = "text", encoding = "UTF-8")
   
-  # Strip comment lines (start with #)
   lines      <- strsplit(text, "\n")[[1]]
   data_lines <- lines[!startsWith(trimws(lines), "#") & nchar(trimws(lines)) > 0]
   clean_text <- paste(data_lines, collapse = "\n")
@@ -130,9 +129,11 @@ fetch_ncei_csv <- function(variable, max_retries = 3, timeout_sec = 90) {
     filter(!is.na(value), value > -99)
 }
 
-# NCEI publishes monthly updates around the 8th-10th of each month
+# NCEI publishes monthly updates around the 8th-10th of each month.
 # Only fetch if: (1) we're on/after the 10th, AND
-#                (2) we don't already have current month's data
+#                (2) the existing data doesn't already contain last month's data.
+# NOTE: do NOT use file.info()$mtime to check currency -- git checkout resets
+# all file timestamps to the current run time, making mtime always look "fresh".
 
 ncei_file         <- file.path(data_dir, "ncei_climate_monthly.csv")
 ncei_needs_update <- FALSE
@@ -153,14 +154,20 @@ if (day_of_month >= 10) {
       cat("  NCEI CSV empty or unreadable -- will fetch\n")
       ncei_needs_update <- TRUE
     } else {
-      last_modified      <- file.info(ncei_file)$mtime
-      updated_this_month <- format(last_modified, "%Y-%m") == current_month
-      if (updated_this_month) {
-        cat(sprintf("  NCEI already updated this month (%s) -- skipping\n",
-                    current_month))
+      # Compute the most recent month we expect NCEI to have published.
+      # On/after the 10th, last month's data should be available.
+      expected_month <- as.integer(format(today, "%m")) - 1L
+      expected_year  <- as.integer(format(today, "%Y"))
+      if (expected_month == 0L) { expected_month <- 12L; expected_year <- expected_year - 1L }
+      expected_yyyymm <- sprintf("%d%02d", expected_year, expected_month)
+      
+      max_yyyymm <- max(existing$yyyymm, na.rm = TRUE)
+      
+      if (max_yyyymm >= expected_yyyymm) {
+        cat(sprintf("  NCEI data already current through %s -- skipping\n", max_yyyymm))
       } else {
-        cat(sprintf("  NCEI not yet updated for %s -- will fetch\n",
-                    current_month))
+        cat(sprintf("  NCEI data only through %s, expected >= %s -- will fetch\n",
+                    max_yyyymm, expected_yyyymm))
         ncei_needs_update <- TRUE
       }
     }
