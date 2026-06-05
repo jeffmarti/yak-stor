@@ -115,58 +115,6 @@ runoff_normal <- runoff_raw %>%
   group_by(month) %>%
   summarise(normal_af = mean(volume_af, na.rm = TRUE), .groups = "drop")
 
-# -- BOR monthly discharge (QD observed + QU unregulated)
-bor_file <- file.path(data_dir, "bor_discharge_monthly.csv")
-if (!file.exists(bor_file)) stop("Missing: ", bor_file)
-
-bor_discharge <- read_csv(bor_file, show_col_types = FALSE)
-
-# ── ADD THESE THREE BLOCKS ────────────────────────────────────────────────────
-
-# Apr-Sep system total: NWRFC natural flow by water year (Panel 1 + 2)
-seas_months <- 4:9
-
-nwrfc_aprsep <- runoff_raw %>%
-  filter(
-    reservoir == "ALL",
-    month     %in% seas_months
-  ) %>%
-  mutate(water_year = if_else(month >= 10L, year + 1L, as.integer(year))) %>%
-  group_by(water_year) %>%
-  summarise(
-    nwrfc_af = sum(volume_af, na.rm = TRUE),
-    n_months  = n(),
-    .groups   = "drop"
-  ) %>%
-  filter(n_months == length(seas_months))   # complete seasons only
-
-# Apr-Sep system total: BOR QD observed discharge by water year (Panel 3)
-# Sum across all 5 reservoirs; floor augmentation at zero
-bor_qd_aprsep <- bor_discharge %>%
-  filter(
-    pcode  == "QD",
-    month  %in% seas_months
-  ) %>%
-  mutate(water_year = if_else(month >= 10L, year + 1L, year)) %>%
-  group_by(water_year) %>%
-  summarise(
-    bor_qd_af = sum(volume_af, na.rm = TRUE),
-    n_months   = n(),
-    .groups    = "drop"
-  ) %>%
-  filter(n_months == length(seas_months) * 5)  # 5 reservoirs × 6 months = 30
-
-# Apr 1 snowpack predictor: one value per water year (Panel 1)
-apr1_snow <- daily %>%
-  mutate(
-    water_year = if_else(month(Date) >= 10, year(Date) + 1L, year(Date)),
-    mo_day     = format(Date, "%m-%d")
-  ) %>%
-  filter(mo_day == "04-01", water_year >= SNOW_YR_START) %>%
-  select(water_year, snow_apr1_af = snow_af) %>%
-  distinct(water_year, .keep_all = TRUE)
-
-# ── END ADDITIONS ─────────────────────────────────────────────────────────────
 
 # System runoff with anomaly -- filtered to PLOT_START year
 runoff_system <- runoff_raw %>%
@@ -296,6 +244,49 @@ daily <- swe_daily %>%
   ) %>%
   arrange(Date)
 
+# Apr-Sep system total: NWRFC natural flow by water year (Panel 1 + 2)
+seas_months <- 4:9
+
+nwrfc_aprsep <- runoff_raw %>%
+  filter(
+    reservoir == "ALL",
+    month     %in% seas_months
+  ) %>%
+  mutate(water_year = if_else(month >= 10L, year + 1L, as.integer(year))) %>%
+  group_by(water_year) %>%
+  summarise(
+    nwrfc_af = sum(volume_af, na.rm = TRUE),
+    n_months  = n(),
+    .groups   = "drop"
+  ) %>%
+  filter(n_months == length(seas_months))   # complete seasons only
+
+# Apr-Sep system total: BOR QD observed discharge by water year (Panel 3)
+# Sum across all 5 reservoirs; floor augmentation at zero
+bor_qd_aprsep <- bor_discharge %>%
+  filter(
+    pcode  == "QD",
+    month  %in% seas_months
+  ) %>%
+  mutate(water_year = if_else(month >= 10L, year + 1L, year)) %>%
+  group_by(water_year) %>%
+  summarise(
+    bor_qd_af = sum(volume_af, na.rm = TRUE),
+    n_months   = n(),
+    .groups    = "drop"
+  ) %>%
+  filter(n_months == length(seas_months) * 5)  # 5 reservoirs × 6 months = 30
+
+# Apr 1 snowpack predictor: one value per water year (Panel 1)
+apr1_snow <- daily %>%
+  mutate(
+    water_year = if_else(month(Date) >= 10, year(Date) + 1L, year(Date)),
+    mo_day     = format(Date, "%m-%d")
+  ) %>%
+  filter(mo_day == "04-01", water_year >= SNOW_YR_START) %>%
+  select(water_year, snow_apr1_af = snow_af) %>%
+  distinct(water_year, .keep_all = TRUE)
+
 dam_daily_full <- dam_csv %>%
   filter(reservoir != "ALL") %>%
   group_by(Date) %>%
@@ -315,6 +306,7 @@ extract_oct1 <- function(df_dam) {
 
 carryover_normal_df <- extract_oct1(dam_daily_full) %>%
   filter(water_year >= NORMAL_START, water_year <= NORMAL_END)
+
 carryover_median    <- median(carryover_normal_df$dam_af, na.rm = TRUE)
 
 carryover <- daily %>%
