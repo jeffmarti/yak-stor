@@ -65,6 +65,7 @@ mod_forecast_ui <- function(id) {
       )
     ),
     
+  
     tags$div(
       style = paste0(
         "margin-top:8px; font-size:10px; color:#888; padding:0 4px;",
