@@ -48,12 +48,16 @@ mod_forecast_ui <- function(id) {
              plotlyOutput(ns("scatter_plot"), height = "400px", width = "100%")
       )
     ),
+    # ── Divider between Panel 1 and Panel 2 ──
+    tags$div(style = "border-top: 1px solid #e8e8e8; margin: 18px 0 10px 0;"),
     
     fluidRow(
       column(12,
              plotlyOutput(ns("monthly_plot"), height = "300px", width = "100%")
       )
     ),
+    # ── Divider between Panel 2 and Panel 3 ──
+    tags$div(style = "border-top: 1px solid #e8e8e8; margin: 18px 0 10px 0;"),
     
     fluidRow(
       column(12,
