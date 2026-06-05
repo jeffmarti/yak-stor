@@ -23,6 +23,7 @@ suppressPackageStartupMessages({
 source("fetch_usbr_storage.R")
 source("nohrsc_yakima_incremental.R")
 source("fetch_nwrfc_runoff.R")
+source("fetch_bor_discharge.R")
 
 cat(sprintf("\n=== Yakima data pipeline -- %s ===\n\n", Sys.time()))
 
@@ -214,6 +215,19 @@ tryCatch({
 }, error = function(e) {
   cat("  ERROR in NWRFC runoff fetch:", conditionMessage(e), "\n")
 })
+
+# ==============================================================================
+# 5. BOR DISCHARGE (QD + QU)
+# ==============================================================================
+
+cat("\nStep 5: Fetching BOR discharge (QD + QU)...\n")
+
+tryCatch({
+  fetch_bor_discharge(data_dir = data_dir)
+  cat("  BOR discharge update complete\n")
+}, error = function(e) {
+  cat("  ERROR in BOR discharge fetch:", conditionMessage(e), "\n")
+})
 # ==============================================================================
 # SUMMARY
 # ==============================================================================
@@ -221,7 +235,7 @@ tryCatch({
 cat(sprintf("\n=== Pipeline complete -- %s ===\n\n", Sys.time()))
 
 for (f in c("yakima_dam_daily.csv", "yakima_swe_combined.csv",
-            "ncei_climate_monthly.csv")) {
+            "ncei_climate_monthly.csv", "bor_discharge_monthly.csv")) {
   fp <- file.path(data_dir, f)
   if (file.exists(fp)) {
     info <- file.info(fp)

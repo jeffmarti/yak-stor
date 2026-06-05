@@ -133,7 +133,8 @@ jobs:
                 'data/yakima_dam_daily.csv',
                 'data/ncei_climate_monthly.csv',
                 'data/yakima_swe_ce_seed.csv',
-                'data/nwrfc_runoff_monthly.csv'
+                'data/nwrfc_runoff_monthly.csv',
+                'data/bor_discharge_monthly.csv'
               )
             )
           "
