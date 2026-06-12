@@ -76,11 +76,12 @@ tryCatch({
 cat("\nStep 3: Fetching NCEI monthly climate...\n")
 
 fetch_ncei_csv <- function(variable, max_retries = 3, timeout_sec = 90) {
+  # NOTE (2026-06): NCEI dropped the Anomaly column from data.csv and no
+  # longer honors base-period params; anomaly is computed locally below.
   url <- sprintf(
     paste0("https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/",
-           "divisional/time-series/4506/%s/1/0/1895-2026/data.csv",
-           "?base_prd=true&begbaseyear=1991&endbaseyear=2020"),
-    variable
+           "divisional/time-series/4506/%s/1/0/1895-%s/data.csv"),
+    variable, format(Sys.Date(), "%Y")
   )
   
   resp <- NULL
@@ -119,8 +120,15 @@ fetch_ncei_csv <- function(variable, max_retries = 3, timeout_sec = 90) {
   )
   if (is.null(df) || nrow(df) == 0) return(NULL)
   
-  df %>%
-    rename(yyyymm = Date, value = Value, anomaly = Anomaly) %>%
+  if (!all(c("Date", "Value") %in% names(df))) {
+    warning("NCEI CSV missing Date/Value columns -- format changed? Cols: ",
+            paste(names(df), collapse = ", "))
+    return(NULL)
+  }
+  
+  df <- df %>%
+    rename(yyyymm = Date, value = Value) %>%
+    rename(any_of(c(anomaly = "Anomaly"))) %>%  # optional; absent since 2026
     mutate(
       yyyymm   = sprintf("%06d", as.integer(yyyymm)),
       variable = variable,
@@ -128,6 +136,21 @@ fetch_ncei_csv <- function(variable, max_retries = 3, timeout_sec = 90) {
       month    = as.integer(substr(yyyymm, 5, 6))
     ) %>%
     filter(!is.na(value), value > -99)
+  
+  # NCEI no longer supplies an Anomaly column; compute it from 1991-2020
+  # monthly normals (same definition global.R uses, identical results).
+  if (!"anomaly" %in% names(df)) {
+    normals <- df %>%
+      filter(year >= 1991, year <= 2020) %>%
+      group_by(month) %>%
+      summarise(normal = mean(value, na.rm = TRUE), .groups = "drop")
+    df <- df %>%
+      left_join(normals, by = "month") %>%
+      mutate(anomaly = round(value - normal, 2)) %>%
+      select(-normal)
+  }
+  
+  df
 }
 
 # NCEI publishes monthly updates around the 8th-10th of each month.
